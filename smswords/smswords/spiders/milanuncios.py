@@ -6,11 +6,7 @@ import scrapy
 from scrapy.selector import Selector
 
 from smswords.utils import *
-
-def random_proxy(proxies):
-    rproxy = random.choice(proxies)
-    proxy = "http://%s" %rproxy.split('@')[-1]
-    return proxy
+from smswords.items import MobileNumbersItem
 
 def clean_text(text):
     text = text.replace('\n',' ').replace('\r', ' ').replace('\t', ' ')
@@ -24,9 +20,12 @@ class MilanunciosSpider(scrapy.Spider):
         'http://www.milanuncios.com/',
     )
 
-    proxies = getProxies()
-        
+
     def parse(self, response):
+        if response.status!=200:
+            print "parse::", response.meta["proxy"]
+            proxySuspended(response.meta["proxy"])
+
         self.categories_list_xpath = '//div[@class="cat2Item"]/a/@href'
         doc = Selector(response)
         listing_pages = doc.xpath(self.categories_list_xpath)
@@ -34,13 +33,26 @@ class MilanunciosSpider(scrapy.Spider):
         for lpage in listing_pages[:3]:
             lpage = "http://www.milanuncios.com"+lpage.extract()
             request = scrapy.Request(lpage, callback=self.parse_listing)
-            #request.meta['proxy'] = random_proxy(MilanunciosSpider.proxies)
             yield request
 
 
     def parse_listing(self, response):
+        if response.status!=200:
+            print "parse::", response.meta["proxy"]
+            proxySuspended(response.meta["proxy"])
+            status = "error"
+        else: status= "crawled"
+
+        ## UPDATE CRAWL STATUS
+        aux_info = {"url": response.url, "status": response.status,
+                    "crawl_status": status, "proxy": response.meta["proxy"]}
+
+        update_crawl_status(aux_info)
+
+        ## Parse AD Listing Page
         doc = Selector(response)
         ads = doc.xpath('//div[@class="aditem"]')
+
         for ad in ads:
             result_text =  ad.xpath('.//div[@class="aditem-header"]/div[2]//text()').extract()
             ## CITY
@@ -63,6 +75,24 @@ class MilanunciosSpider(scrapy.Spider):
             ad_title = clean_text(title[0]) if title else ""
 
             #print "<>#<>".join([city, area, phone_number, reference_link, ad_title])
+
+            if area:
+                area_id, city_id = getLocationID(area)
+            else:
+                area_id, city_id = getLocationID(city, "city")
+
+            ad_item = MobileNumbersItem()
+
+            ad_item["number"] = phone_number
+            ad_item["country_code"] = "ES"
+            ad_item["area_id"] = area_id
+            ad_item["city_id"] = city_id
+            ad_item["district_id"] = 0
+            ad_item["postal_code_id"] = 0
+            ad_item["created_at"] = current_timestamp()
+            ad_item["updated_at"] = current_timestamp()
+
+            yield ad_item
              
 
         
