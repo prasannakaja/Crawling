@@ -6,9 +6,18 @@
 # http://doc.scrapy.org/en/latest/topics/items.html
 
 import scrapy
+from scrapy.item import Field
 
-
-class SmswordsItem(scrapy.Item):
+class MobileNumbersItem(scrapy.Item):
     # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+
+    number = Field()
+    country_code = Field()
+    city_id = Field()
+    area_id = Field()
+    district_id = Field()
+    postal_code_id = Field()
+    deleted_at = Field()
+    created_at = Field()
+    updated_at = Field()
+
