@@ -13,8 +13,49 @@ def createDBConnection():
 
     return conn, cursor
 
+def update_crawl_status(aux_info):
+    conn, cursor = createDBConnection()
+    aux = {"HttpStatus": aux_info["status"]}
+
+    query = "INSERT INTO advert_crawl_status(url, proxy_info, status, auxilary_info, \
+                created_at, updated_at) values (%s, %s, %s, %s, %s, %s)"
+    values = (aux_info["url"], aux_info["proxy"], aux_info["crawl_status"], \
+                str(aux), current_timestamp(), current_timestamp())
+    cursor.execute(query, values)
+    conn.commit()
+
+    ## Close DB connection
+    cursor.close()
+    conn.close()
+
 def current_timestamp():
     return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+def getLocationID(location, loc_type=""):
+    """
+    :type loc_type: string value.(city/area/district)
+    """
+    conn, cursor = createDBConnection()
+    area_id = city_id = 0
+
+    if loc_type == "city":
+        query = "SELECT id FROM cities WHERE name='%s' and country_code='ES'"
+        cursor.execute(query %location)
+        print cursor.fetchall()
+        city_id = cursor.fetchall()[0][0] if cursor.fetchall() else 0
+    else:
+        query = "SELECT id, city_id FROM areas WHERE name='%s' and city_id  \
+            in (SELECT id FROM cities WHERE country_code='ES')"
+        cursor.execute(query %location)
+
+        for row in cursor.fetchall():
+            area_id = row[0]
+            city_id = row[1]
+
+    cursor.close()
+    conn.close()
+
+    return area_id, city_id
 
 def make_proxy_list(proxy_ids):
     conn, cursor = createDBConnection()
