@@ -18,10 +18,10 @@ NEWSPIDER_MODULE = 'smswords.spiders'
 USER_AGENT = '"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36'
 DOMAIN = "www.milanuncios.com"
 
-DATABASE = "TITO"
-USER = "root"
+DATABASE = "smswords_project"
+USER = "smswords_swadmin"
 HOST = "localhost"
-PASSWD = "prasanna"
+PASSWD = "%{AV-<hG24si~5"
 
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
