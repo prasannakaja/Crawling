@@ -22,15 +22,11 @@ class MilanunciosSpider(scrapy.Spider):
 
 
     def parse(self, response):
-        if response.status!=200:
-            print "parse::", response.meta["proxy"]
-            proxySuspended(response.meta["proxy"])
-
         self.categories_list_xpath = '//div[@class="cat2Item"]/a/@href'
         doc = Selector(response)
         listing_pages = doc.xpath(self.categories_list_xpath)
         
-        for lpage in listing_pages[:3]:
+        for lpage in listing_pages:
             lpage = "http://www.milanuncios.com"+lpage.extract()
             request = scrapy.Request(lpage, callback=self.parse_listing)
             yield request
@@ -38,8 +34,6 @@ class MilanunciosSpider(scrapy.Spider):
 
     def parse_listing(self, response):
         if response.status!=200:
-            print "parse::", response.meta["proxy"]
-            proxySuspended(response.meta["proxy"])
             status = "error"
         else: status= "crawled"
 
@@ -81,6 +75,7 @@ class MilanunciosSpider(scrapy.Spider):
             else:
                 area_id, city_id = getLocationID(city, "city")
 
+            ## MobileNumber Item
             ad_item = MobileNumbersItem()
 
             ad_item["number"] = phone_number
@@ -93,9 +88,13 @@ class MilanunciosSpider(scrapy.Spider):
             ad_item["updated_at"] = current_timestamp()
 
             yield ad_item
-             
-
-        
+           
+        ## Navigate to Next Pages 
+        nextpage = '//div[@class="adlist-paginator-pagelink adlist-paginator-pageselected"]//a[contains(@href, "pagina")]/@href' 
+        next_page = doc.xpath(nextpage).extract()
+        if next_page:
+            next_page = response.url.split('?')[0]+next_page[-1]            
+            yield scrapy.Request(next_page, callback=self.parse_listing) 
        
         
  
