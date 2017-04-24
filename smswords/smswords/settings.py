@@ -34,6 +34,8 @@ DOWNLOAD_DELAY=3
 
 RETRY_TIMES = 3
 
+DUPEFILTER_CLASS = 'scrapy.dupefilters.BaseDupeFilter'
+
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN=16
 CONCURRENT_REQUESTS_PER_IP=2
@@ -60,6 +62,7 @@ CONCURRENT_REQUESTS_PER_IP=2
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'smswords.middleware.MultipleProxyMiddleware': 543,
+    'smswords.middleware.FailResponseMiddleware': 200,
     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': None,
 }
     
